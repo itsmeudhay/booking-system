@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, button {
+      padding: 8px;
+      margin-top: 5px;
+      width: 100%;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .response {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Booking System</h1>
+
+    <!-- Customer Form -->
+    <h2>Create Customer</h2>
+    <form id="customerForm">
+      <label for="full_name">Full Name:</label>
+      <input type="text" id="full_name" name="full_name" required>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      
+      <label for="phone_number">Phone Number:</label>
+      <input type="text" id="phone_number" name="phone_number" required>
+
+      <button type="submit">Create Customer</button>
+    </form>
+
+    <div id="customerResponse" class="response"></div>
+
+    <!-- Booking Form -->
+    <h2>Create Booking</h2>
+    <form id="bookingForm">
+      <label for="customerId">Customer ID:</label>
+      <input type="text" id="customerId" name="customerId" required>
+      
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date" required>
+      
+      <label for="timeSlot">Time Slot:</label>
+      <select id="timeSlot" name="timeSlot" required>
+        <option value="9:00 AM">9:00 AM</option>
+        <option value="10:00 AM">10:00 AM</option>
+        <option value="11:00 AM">11:00 AM</option>
+        <option value="12:00 PM">12:00 PM</option>
+      </select>
+      
+      <label for="duration">Duration (in minutes):</label>
+      <input type="number" id="duration" name="duration" required>
+
+      <label for="packageId">Package ID:</label>
+      <input type="text" id="packageId" name="packageId" required>
+      
+      <label for="addOns">Add-ons (comma-separated AddOn IDs):</label>
+      <input type="text" id="addOns" name="addOns">
+      
+      <button type="submit">Create Booking</button>
+    </form>
+
+    <div id="bookingResponse" class="response"></div>
+
+    <!-- Check Availability -->
+    <h2>Check Availability</h2>
+    <form id="availabilityForm">
+      <label for="availabilityDate">Select Date:</label>
+      <input type="date" id="availabilityDate" name="availabilityDate" required>
+      <button type="submit">Check Availability</button>
+    </form>
+
+    <div id="availabilityResponse" class="response"></div>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:5000/api';
+
+    // Create Customer
+    document.getElementById('customerForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const full_name = document.getElementById('full_name').value;
+      const email = document.getElementById('email').value;
+      const phone_number = document.getElementById('phone_number').value;
+
+      try {
+        const response = await fetch(`${apiUrl}/customers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, phone_number }),
+        });
+
+        const data = await response.json();
+        document.getElementById('customerResponse').innerHTML = data.message || 'Customer created successfully!';
+      } catch (error) {
+        document.getElementById('customerResponse').innerHTML = 'Error creating customer';
+      }
+    });
+
+    // Create Booking
+    document.getElementById('bookingForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const customerId = document.getElementById('customerId').value;
+      const date = document.getElementById('date').value;
+      const timeSlot = document.getElementById('timeSlot').value;
+      const duration = document.getElementById('duration').value;
+      const packageId = document.getElementById('packageId').value;
+      const addOns = document.getElementById('addOns').value.split(',').map(id => id.trim());
+
+      try {
+        const response = await fetch(`${apiUrl}/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerId, date, timeSlot, duration, packageId, addOns
+          }),
+        });
+
+        const data = await response.json();
+        document.getElementById('bookingResponse').innerHTML = data.message || 'Booking created successfully!';
+      } catch (error) {
+        document.getElementById('bookingResponse').innerHTML = 'Error creating booking';
+      }
+    });
+
+    // Check Availability
+    document.getElementById('availabilityForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const date = document.getElementById('availabilityDate').value;
+
+      try {
+        const response = await fetch(`${apiUrl}/availability?date=${date}`);
+        const data = await response.json();
+
+        if (data.availableSlots && data.availableSlots.length > 0) {
+          document.getElementById('availabilityResponse').innerHTML = `Available slots: ${data.availableSlots.join(', ')}`;
+        } else {
+          document.getElementById('availabilityResponse').innerHTML = 'No available slots on this date';
+        }
+      } catch (error) {
+        document.getElementById('availabilityResponse').innerHTML = 'Error checking availability';
+      }
+    });
+  </script>
+</body>
+</html>
